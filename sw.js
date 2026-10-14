@@ -3,7 +3,7 @@
    - The app page itself: tries the internet first (so updates arrive), falls back to the saved copy.
    - Icons, fonts and other files: uses the saved copy, refreshing it in the background.
    When you upload a new version, bump VERSION so old saved copies are cleared. */
-const VERSION = "myplanner-v5";
+const VERSION = "myplanner-v6";
 const CORE = ["./", "index.html", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {

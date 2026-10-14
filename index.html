@@ -1319,6 +1319,8 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
       const add = AUTO_KEYS.filter(id => !list.some(h => h.id === id)).map(id => ({ id, name: CATS[AUTO[id]].name }));
       return saveHabits(list.slice(0, old).concat(add, list.slice(old + 1)));
     }
+    const missing = AUTO_KEYS.filter(id => !list.some(h => h.id === id));   // the three auto habits always exist
+    if (missing.length) return saveHabits(list.concat(missing.map(id => ({ id, name: CATS[AUTO[id]].name }))));
     HABITS = list.slice(); TOTAL = HABITS.length;
     buildHabits(); renderList(); renderChart(); syncAuto();
   }
@@ -1363,7 +1365,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     const grp = (title, items) => '<div class="rm-group"><h4>' + title + '</h4>' + (items.length ? '<ul>' + items.join("") + '</ul>' : '<p class="rm-none">Nothing here.</p>') + '</div>';
     const up = events.filter(e => isRep(e) ? e.until >= tk : e.date >= tk).sort((a, b) => (isRep(b) - isRep(a)) || a.date.localeCompare(b.date) || toMin(a.start) - toMin(b.start));
     const html =
-      grp("Habits", HABITS.map(h => row("habit", h.id, h.name))) +
+      grp("Habits", HABITS.filter(h => !AUTO[h.id]).map(h => row("habit", h.id, h.name))) +
       grp("Upcoming events", up.map(e => row("event", e.id, e.title + (e.example ? " (example)" : ""), (isRep(e) ? repeatText(e) + " (all repeats)" : fromKey(e.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })) + " · " + e.start + "–" + e.end))) +
       grp("Unassigned tasks", tasks.map(t => row("task", t.id, t.title, t.done ? "Done" : ""))) +
       '<div class="sheet-actions" style="margin-top:14px"><button type="button" class="btn primary" data-close>Done</button></div>';
@@ -1487,6 +1489,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     db.doc("config/habits").onSnapshot(snap => {
       const d = snap.exists && snap.data();
       if (d && Array.isArray(d.list)) applyHabits(d.list.filter(h => h && h.id && h.name));
+      else if (!snap.metadata.fromCache) applyHabits([]);          // brand-new install: start with the auto habits
     }, () => {});
   })();
 })();
